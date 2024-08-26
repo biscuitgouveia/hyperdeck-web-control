@@ -10,12 +10,16 @@ class HyperdeckError extends Error {
     }
     /**
      * Logs an error to the console in the format YYYY-MM-DDtHH:MM:SS:MMMz: ERROR_CODE - ERROR MESSAGE
+     * @function outputErrorLog
      */
     outputErrorLog() {
         console.error(this.logPoint);
     }
 }
 
+/**
+ *
+ */
 export class HyperdeckSyntaxError extends HyperdeckError {
     constructor(message = "Error 100 - Invalid syntax.", options) {
         super(message, options);

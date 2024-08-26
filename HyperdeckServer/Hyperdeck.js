@@ -2,6 +2,7 @@
 
 import {Socket} from "net";
 import {jsonifyHyperdeck} from "./utils/jsonUtils.js";
+import { errorDelegation } from "./hyperdeckErrors.js";
 
 class Hyperdeck {
     #client;
@@ -11,13 +12,17 @@ class Hyperdeck {
     #clipList;
     #buffer;
 
+    getClient() {
+        return this.#client;
+}
+
     /**
      * Instantiates a new Hyperdeck object.
      * @constructor
      * @param {string} hostAddress - The IP address of the Hyperdeck unit.
      * @param {string} name - The desired name of the Hyperdeck unit.
      */
-    constructor(hostAddress = "10.61.57.141", name) {
+    constructor(hostAddress = "10.61.57.141", name = "Hyperdeck") {
         this.#client = new Socket();
         this.#client.setEncoding("utf8");
         this.#hostAddress = hostAddress;
@@ -41,11 +46,18 @@ class Hyperdeck {
      */
     async startConnection() {
         return new Promise(resolve => {
-            this.#client.connect({port: 9993, host: this.#hostAddress});
-            this.#client.on("data", data => {
-                const response = jsonifyHyperdeck(data);
-                resolve(response);
-            })
+            try {
+                this.#client.connect({port: 9993, host: this.#hostAddress});
+                this.#client.on("data", data => {
+                    const response = jsonifyHyperdeck(data);
+                    if (response.code >= 100 || response.code < 200) {
+                        throw errorDelegation(response.code);
+                    }
+                    resolve(response);
+                })
+            } catch (err) {
+                return Promise.reject(err);
+            }
         })
     }
 
@@ -57,11 +69,18 @@ class Hyperdeck {
     async getStatus() {
         this.#buffer = "";
         return new Promise(resolve => {
-            this.#client.write("transport info\n");
-            this.#client.on("data", data => {
-                const response = jsonifyHyperdeck(this.#buffer);
-                resolve(response);
-            })
+            try {
+                this.#client.write("transport info\n");
+                this.#client.on("data", data => {
+                    const response = jsonifyHyperdeck(this.#buffer);
+                    if (response.code >= 100 || response.code < 200) {
+                        throw errorDelegation(response.code);
+                    }
+                    resolve(response);
+                })
+            } catch (err) {
+                return Promise.reject(err);
+            }
         })
     };
 
@@ -92,7 +111,7 @@ class Hyperdeck {
     };
 
 
-    closeConnection() {
+    async closeConnection() {
         return new Promise(resolve => {
             this.#client.write("quit\n");
             this.#client.on("data", data => {
@@ -113,7 +132,7 @@ class Hyperdeck {
         })
     }
 
-    stopClip() {
+    async stopClip() {
         return new Promise(resolve => {
             this.#client.write("stop\n");
             this.#client.on("data", data => {
@@ -134,7 +153,7 @@ class Hyperdeck {
 
     }
 
-    prevClip() {
+    async prevClip() {
         return new Promise(resolve => {
             this.#client.write("goto: clip id: -1\n");
             this.#client.on("data", data => {
@@ -144,7 +163,7 @@ class Hyperdeck {
         })
     }
 
-    loopPlay() {
+    async loopPlay() {
         return new Promise(resolve => {
             this.#client.write("play: loop: true single clip: true\n");
             this.#client.on("data", data => {
@@ -154,7 +173,7 @@ class Hyperdeck {
         });
     }
 
-    cueClip(clipId) {
+    async cueClip(clipId) {
         return new Promise(resolve => {
             this.#client.write(`goto: clip id: ${clipId}\n`);
             this.#client.on("data", data => {
@@ -164,7 +183,7 @@ class Hyperdeck {
         });
     }
 
-    liveInput() {
+    async liveInput() {
         return new Promise(resolve => {
             this.#client.write("preview: enable: true\n");
             this.#client.on("data", data => {
