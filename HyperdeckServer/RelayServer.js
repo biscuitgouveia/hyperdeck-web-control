@@ -1,9 +1,7 @@
 import express from "express";
 import Hyperdeck from "./Hyperdeck.js";
-
 import cors from "cors";
 import morgan from "morgan";
-
 
 const initHyperdeck = async () => {
     const hd1 = new Hyperdeck("10.61.57.142");
