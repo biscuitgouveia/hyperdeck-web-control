@@ -1,14 +1,14 @@
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-
-chai.use(chaiAsPromised)
-const expect = chai.expect
 import sinon from 'sinon'
-
 import Hyperdeck from '../Hyperdeck.js'
 import {mockStatus} from "./testConsts.js";
 import {Socket} from "net";
 import * as assert from "node:assert";
+
+chai.use(chaiAsPromised)
+const expect = chai.expect
+
 
 describe('Hyperdeck', () => {
     describe('.startConnection', () => {
@@ -19,7 +19,7 @@ describe('Hyperdeck', () => {
             // Arrange
             const hd = new Hyperdeck();
             const fakeSocketOn = sinon.fake.yieldsAsync(mockStatus)
-            const fakeSocketWrite = sinon.fake.returns("1");
+            const fakeSocketWrite = sinon.fake.returns("transport info\n");
 
             const client = hd.getClient();
             sinon.replace(client, "write", fakeSocketWrite);
