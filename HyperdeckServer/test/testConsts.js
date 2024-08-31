@@ -13,3 +13,14 @@ export const mockStatusObject = {
         "loop": "true"
     }
 };
+
+export const mockClipList = "205 clips info:\r\n1: 00 7NEWS LOGO LOOP.mov\r\n2: 01 THE LATEST LOGO LOOP.mov\r\n3: 02 SUNRISE SET MCU.mov\r\n\r\n";
+
+export const mockCLipListOutput = {
+    "code": 205,
+    "clips info:": {
+        "1": "00 7NEWS LOGO LOOP",
+        "2": "01 THE LATEST LOGO LOOP",
+        "3": "02 SUNRISE SET MCU"
+    }
+}

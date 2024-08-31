@@ -26,6 +26,7 @@ export function jsonifyHyperdeck(input) {
 
     for (let i = 1; i < body.length; i++) {
         const itemSplit = body[i].split(": ");
+
         if (itemSplit[0] === "clip count") {
             continue;
         }
