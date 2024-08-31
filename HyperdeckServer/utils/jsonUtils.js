@@ -13,12 +13,14 @@ export function jsonifyHyperdeck(input) {
         response = input;
     }
 
+    // Extract response code
     const code = Number(response.slice(0, 3));
     // TODO: Handle error responses from the Hyperdeck (Codes 100 - 199)
     const body = response
         .slice(4)
         .split("\r\n")
         .filter(item => item.length > 0);
+
     const topicObject = String(body[0]);
     const data = {};
 
