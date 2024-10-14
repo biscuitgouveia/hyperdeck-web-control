@@ -1,0 +1,314 @@
+openapi: 3.1.0
+info:
+  title: Hyperdeck Control API
+  version: 0.1.0
+  description: A custom API for controlling a Blackmagic Design Hyperdeck.
+  contact:
+    name: Ethan Gouveia
+    email: ethangouveiamain@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit
+servers:
+  - url: per-dev-ethan:4000
+    description: Placeholder development server
+paths:
+  /ping:
+    get:
+      summary: Ping the server to confirm connection.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    examples: ["Server is up."]
+        '408':
+          description: Request timeout
+  /cliplist:
+    get:
+      summary: Get a list of clips from a Hyperdeck.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/cliplist'
+              examples:
+                cliplist-success:
+                  $ref: '#/components/examples/cliplist'
+        '400':
+          description: Bad request
+        '404':
+          description: Resource not found
+        '408':
+          description: Request timeout
+  /status:
+    get:
+      summary: Get the transport status of the Hyperdeck.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+              examples:
+                status-playing:
+                  $ref: '#/components/examples/status-playing'
+        '400':
+          description: Bad request
+        '404':
+          description: Resource not found
+        '408':
+          description: Request timeout
+  /play:
+    get:
+      summary: Play the currently cued clip.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+              examples:
+                status-playing:
+                  $ref: '#/components/examples/status-playing'
+        '400':
+          description: Bad request
+        '404':
+          description: Resource not found
+        '408':
+          description: Request timeout
+  /stop:
+    get:
+      summary: Stop playback and output current frame.
+      responses:
+        '200':
+          description: Sucessful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+              examples:
+                status-stopped:
+                  $ref: '#/components/examples/status-stopped'
+        '400':
+          description: Bad request
+        '404':
+          description: Resource not found
+        '408':
+          description: Request timeout
+  /nextclip:
+    get:
+      summary: Skip ahead to next clip id.
+      responses:
+        '200':
+          description: Sucessful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+              examples:
+                status-playing:
+                  $ref: '#/components/examples/status-playing'
+        '400':
+          description: Bad request
+        '404':
+          description: Resource not found
+        '408':
+          description: Request timeout
+  /prevclip:
+    get:
+      summary: Skip back to previous clip id.
+      responses:
+        '200':
+          description: Sucessful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+              examples:
+                status-playing:
+                  $ref: '#/components/examples/status-playing'
+        '400':
+          description: Bad request
+        '404':
+          description: Resource not found
+        '408':
+          description: Request timeout
+  /loopplay:
+    get:
+      summary: Play the current clip only on a loop.
+      responses:
+        '200':
+          description: Sucessful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+              examples:
+                status-playing:
+                  $ref: '#/components/examples/status-looping'
+        '400':
+          description: Bad request
+        '404':
+          description: Resource not found
+        '408':
+          description: Request timeout
+  /cue/{id}:
+    get:
+      summary: Stop playback and output current frame.
+      parameters:
+        - name: id
+          in: path
+          description: ID of clip to cue.
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Sucessful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+              examples:
+                status-stopped:
+                  $ref: '#/components/examples/status-stopped'
+        '400':
+          description: Bad request
+        '404':
+          description: Resource not found
+        '408':
+          description: Request timeout
+components:
+  schemas:
+    cliplist:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          examples: [205]
+        clips info: 
+          type: array
+          items:
+            $ref: '#/components/schemas/clipinfo'
+    clipinfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          examples: [1, 2, 3]
+        title:
+          type: string
+          examples: ["Generic White GFX Clip", "Finance GFX Clip", "Sport GFX Clip"]
+    status:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          examples: [208]
+        transport info:
+          $ref: '#/components/schemas/transportstatus'
+    transportstatus:
+      type: object
+      properties:
+        status:
+          type: string
+          examples: ["play", "stopped"]
+        speed:
+          type: integer
+          format: int32
+          examples: [100]
+        slot id:
+          type: integer
+          format: int32
+          examples: [1, 2]
+        clip id:
+          type: integer
+          format: int32
+          examples: [12, 13, 14]
+        single clip:
+          type: boolean
+          examples: [true, false]
+        display timecode:
+          type: string
+          examples: ["00:10:00:00"]
+        timecode:
+          type: string
+          examples: ["00:10:00:00"]
+        video format:
+          type: string
+          examples: ["1080i50", "720p25", "576i50"]
+        loop:
+          type: boolean
+          examples: [true, false]
+  examples:
+    cliplist:
+      summary: Successful cliplist response
+      value:
+        code: 205
+        clips info: [
+            {
+              id: 1, title: "Generic White GFX Clip"
+            },
+            {
+              id: 2, title: "Finance GFX Clip"
+            },
+            {
+              id: 3, title: "Sport GFX Clip"
+            }
+          ]
+    status-playing:
+      summary: Transport status - single clip loop
+      value:
+        code: 208
+        transport info:
+          status: "play"
+          speed: 100
+          slot id: 1
+          clip id: 12
+          single clip: false
+          display timecode: "00:10:00:00"
+          timecode: "00:10:00:00"
+          video foramt: "1080i50"
+          loop: false
+    status-stopped:
+      summary: Transport status - stopped
+      value:
+        code: 208
+        transport info:
+          status: "stopped"
+          speed: 0
+          slot id: 1
+          clip id: 12
+          single clip: true
+          display timecode: "00:10:00:00"
+          timecode: "00:10:00:00"
+          video foramt: "1080i50"
+          loop: true
+    status-looping:
+      summary: Transport status - single clip loop
+      value:
+        code: 208
+        transport info:
+          status: "play"
+          speed: 100
+          slot id: 1
+          clip id: 12
+          single clip: true
+          display timecode: "00:10:00:00"
+          timecode: "00:10:00:00"
+          video foramt: "1080i50"
+          loop: true

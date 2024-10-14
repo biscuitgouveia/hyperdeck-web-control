@@ -7,6 +7,13 @@
 export function jsonifyHyperdeck(input) {
     let response;
 
+    // if (response.includes("200 ok")) {
+    //     return({
+    //         code: 200,
+    //         message: "ok",
+    //     })
+    // }
+
     if (input.substring(0, 9) === "undefined") {
         response = input.slice(9);
     } else {

@@ -46,7 +46,7 @@ class Hyperdeck {
      * @param {string} hostAddress - The IP address of the Hyperdeck unit.
      * @param {string} name - The desired name of the Hyperdeck unit.
      */
-    constructor(hostAddress = "10.61.57.141", name = "Hyperdeck") {
+    constructor(hostAddress = "10.61.57.142", name = "Hyperdeck") {
         this.#client = new Socket();
         this.#client.setEncoding("utf8");
         this.#hostAddress = hostAddress;
@@ -68,7 +68,7 @@ class Hyperdeck {
      * @function flushBuffer
      */
     flushBuffer() {
-        this.#buffer = null;
+        this.#buffer = "";
     }
 
     /**
@@ -77,13 +77,15 @@ class Hyperdeck {
      * @param {String} data - Text data received from the Hyperdeck Ethernet Control Protocol.
      * @returns {Object} response - An object containing the response data from the Hyperdeck. The object is formatted to be included as part of a JSON response.
      */
-    async processHyperdeckData(data) {
+    processHyperdeckData(data) {
         try {
         this.#buffer += data.toString();
         // TODO: Test this
+        console.log("Buffer:", this.#buffer);
         if (this.#buffer.includes("\r\n\r\n")) {
             const response = jsonifyHyperdeck(this.#buffer);
-            if (response.code >= 100 || response.code < 200) {
+            console.log("Response:", response);
+            if (response.code >= 100 && response.code < 200) {
                 throw errorDelegation(response.code);
             }
             this.flushBuffer();
@@ -100,8 +102,10 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming communication, status, and protocol version.
      */
     async startConnection() {
+        console.log("one");
         return new Promise(resolve => {
             try {
+                console.log("two");
                 this.#client.connect({port: 9993, host: this.#hostAddress});
                 this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
             } catch (err) {
@@ -116,11 +120,13 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming the transport status of the Hyperdeck.
      */
     async getStatus() {
+        console.log("here")
         this.#buffer = "";
         return new Promise(resolve => {
             try {
                 this.#client.write("transport info\n");
-                this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+                this.#client.on("data", data => {
+                    resolve(this.processHyperdeckData(data))});
             } catch (err) {
                 return Promise.reject(err);
             }
@@ -133,6 +139,7 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing an array of keys and clip titles.
      */
     async getClipList() {
+        this.#buffer = "";
         return new Promise(resolve => {
             this.#client.write("clips get\n");
             this.#client.on("data", data => resolve(this.processHyperdeckData(data)));

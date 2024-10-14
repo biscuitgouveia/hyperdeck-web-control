@@ -1,13 +1,8 @@
 import express from "express";
-import Hyperdeck from "./Hyperdeck.js";
 import cors from "cors";
 import morgan from "morgan";
-
-const initHyperdeck = async () => {
-    const hd1 = new Hyperdeck("10.61.57.142");
-    await hd1.startConnection();
-    return hd1;
-};
+import { initHyperdeck } from "./hd1.js";
+// import Hyperdeck from "./Hyperdeck.js";
 
 const generateResPayload = async (req, res, next, response) => {
     if (response.code === 200) {
@@ -20,15 +15,12 @@ const generateResPayload = async (req, res, next, response) => {
     } else {
         return JSON.stringify({
             status: res.statusCode,
-            message: res.message,
             data: response
         });
     }
 };
 
 const app = express();
-const PORT = 4000;
-const hd1 = await initHyperdeck();
 
 app.use(cors());
 
@@ -54,9 +46,18 @@ app.use(function (req, res, next) {
 
 app.use(morgan('dev'));
 
+const hd1 = await initHyperdeck();
+
+app.get("/ping", (req, res, next) => {
+    res.send({
+        message: "Server is up."
+    });
+})
+
 app.get("/cliplist", async (req, res, next) => {
     const response = await hd1.getClipList();
     const resPayload = await generateResPayload(req, res, next, response);
+    hd1.cleanListeners();
     res.send(resPayload);
 });
 
@@ -117,6 +118,10 @@ app.get("/liveInput", async (req, res, next) => {
     res.send(resPayload);
 });
 
+const PORT = 4000;
+
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
+
+export default app;
