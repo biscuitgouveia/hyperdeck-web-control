@@ -64,7 +64,7 @@ class Hyperdeck {
     }
 
     /**
-     * Sets this.#buffer to null. Called each time buffer data has been processed to prepare it for the next data stream.
+     * Sets this.#buffer to an empty. Called each time buffer data has been processed to prepare it for the next data stream.
      * @function flushBuffer
      */
     flushBuffer() {
@@ -77,23 +77,25 @@ class Hyperdeck {
      * @param {String} data - Text data received from the Hyperdeck Ethernet Control Protocol.
      * @returns {Object} response - An object containing the response data from the Hyperdeck. The object is formatted to be included as part of a JSON response.
      */
-    processHyperdeckData(data) {
-        try {
-        this.#buffer += data.toString();
-        // TODO: Test this
-        console.log("Buffer:", this.#buffer);
-        if (this.#buffer.includes("\r\n\r\n")) {
-            const response = jsonifyHyperdeck(this.#buffer);
-            console.log("Response:", response);
-            if (response.code >= 100 && response.code < 200) {
-                throw errorDelegation(response.code);
-            }
-            this.flushBuffer();
-            return response;
-        }
-        } catch (e) {
-            return e;
-        }
+    async processHyperdeckData(data) {
+        return new Promise(resolve => {
+            try {
+                this.#buffer += data.toString();
+                // TODO: Test this
+                console.log("Buffer:", this.#buffer);
+                if (this.#buffer.includes("\r\n\r\n") || this.#buffer.includes("200 ok")) {
+                    const response = jsonifyHyperdeck(this.#buffer);
+                    console.log("Response:", response);
+                    if (response.code >= 100 && response.code < 200) {
+                        throw errorDelegation(response.code);
+                    }
+                    resolve(response);
+                }
+                } catch (e) {
+                    return e;
+                }
+        })
+        
     }
 
     /**
@@ -107,7 +109,7 @@ class Hyperdeck {
             try {
                 console.log("two");
                 this.#client.connect({port: 9993, host: this.#hostAddress});
-                this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+                this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));
             } catch (err) {
                 return Promise.reject(err);
             }
@@ -115,7 +117,7 @@ class Hyperdeck {
     }
 
     /**
-     * Queries the trasnsport status of the Hyperdeck.
+     * Queries the transport status of the Hyperdeck.
      * @function getStatus
      * @returns {Promise<Object>} An object contianing response information confirming the transport status of the Hyperdeck.
      */
@@ -125,8 +127,8 @@ class Hyperdeck {
         return new Promise(resolve => {
             try {
                 this.#client.write("transport info\n");
-                this.#client.on("data", data => {
-                    resolve(this.processHyperdeckData(data))});
+                this.#client.on("data", async data => {
+                    resolve(await this.processHyperdeckData(data))});
             } catch (err) {
                 return Promise.reject(err);
             }
@@ -141,9 +143,13 @@ class Hyperdeck {
     async getClipList() {
         this.#buffer = "";
         return new Promise(resolve => {
-            this.#client.write("clips get\n");
-            this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
-        });
+            try {
+                this.#client.write("clips get\n");
+                this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));   
+            } catch (err) {
+                return Promise.reject(err);
+            }
+        })
     };
 
     /**
@@ -152,9 +158,10 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming disconnection.
      */
     async closeConnection() {
+        this.#buffer = "";
         return new Promise(resolve => {
             this.#client.write("quit\n");
-            this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+            this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));
         })
     }
 
@@ -164,9 +171,14 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming the transport status of the Hyperdeck.
      */
     async playClip() {
+        this.#buffer = "";
         return new Promise(resolve => {
-            this.#client.write("play\n");
-            this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+            try {
+                this.#client.write("play\n");
+                this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));   
+            } catch (err) {
+                return Promise.reject(err);
+            }
         })
     }
 
@@ -176,9 +188,10 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming the transport status of the Hyperdeck.
      */
     async stopClip() {
+        this.#buffer = "";
         return new Promise(resolve => {
             this.#client.write("stop\n");
-            this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+            this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));
         })
     }
 
@@ -188,9 +201,10 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming the transport status of the Hyperdeck.
      */
     async nextClip() {
+        this.#buffer = "";
         return new Promise(resolve => {
             this.#client.write("goto: clip id: +1\n");
-            this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+            this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));
         })
     }
 
@@ -200,9 +214,10 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming the transport status of the Hyperdeck.
      */
     async prevClip() {
+        this.#buffer = "";
         return new Promise(resolve => {
             this.#client.write("goto: clip id: -1\n");
-            this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+            this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));
         })
     }
 
@@ -212,9 +227,10 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming the transport status of the Hyperdeck.
      */
     async loopPlay() {
+        this.#buffer = "";
         return new Promise(resolve => {
             this.#client.write("play: loop: true single clip: true\n");
-            this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+            this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));
         });
     }
 
@@ -225,10 +241,11 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming the transport status of the Hyperdeck.
      */
     async cueClip(clipId) {
+        this.#buffer = "";
         // TODO: Handle invalid clipId
         return new Promise(resolve => {
             this.#client.write(`goto: clip id: ${clipId}\n`);
-            this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+            this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));
         });
     }
 
@@ -238,9 +255,10 @@ class Hyperdeck {
      * @returns {Promise<Object>} An object contianing response information confirming the transport status of the Hyperdeck.
      */
     async liveInput() {
+        this.#buffer = "";
         return new Promise(resolve => {
             this.#client.write("preview: enable: true\n");
-            this.#client.on("data", data => resolve(this.processHyperdeckData(data)));
+            this.#client.on("data", async data => resolve(await this.processHyperdeckData(data)));
         });
     }
 }

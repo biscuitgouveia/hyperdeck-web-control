@@ -56,6 +56,7 @@ app.get("/ping", (req, res, next) => {
 
 app.get("/cliplist", async (req, res, next) => {
     const response = await hd1.getClipList();
+    console.log("Response to server:", response);
     const resPayload = await generateResPayload(req, res, next, response);
     hd1.cleanListeners();
     res.send(resPayload);
